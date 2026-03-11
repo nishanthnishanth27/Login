@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #111118;
+      --border:    #1e1e2e;
+      --accent:    #e8ff47;
+      --accent2:   #ff4766;
+      --text:      #f0f0f5;
+      --muted:     #6b6b80;
+      --error:     #ff4766;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    .bg-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(232,255,71,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,255,71,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(120px);
+      pointer-events: none; z-index: 0; opacity: .35;
+    }
+    .blob-1 { width: 500px; height: 500px; background: #3a1aff; top: -120px; left: -100px; animation: drift1 18s ease-in-out infinite; }
+    .blob-2 { width: 380px; height: 380px; background: #ff4766; bottom: -80px; right: -60px;  animation: drift2 22s ease-in-out infinite; }
+    .blob-3 { width: 260px; height: 260px; background: #e8ff47; top: 40%; left: 55%;          animation: drift3 14s ease-in-out infinite; opacity: .15; }
+
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-50px,-30px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,-50px)} }
+
+    /* ── LAYOUT ── */
+    .page {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 2rem;
+    }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%; max-width: 420px;
+      background: rgba(17,17,24,.72);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.8rem 2.8rem 2.4rem;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 40px 80px rgba(0,0,0,.6);
+      animation: cardIn .6s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(28px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── LOGO MARK ── */
+    .logo-mark {
+      display: flex; align-items: center; gap: .7rem; margin-bottom: 2.4rem;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.05rem;
+      letter-spacing: -.02em; color: var(--text);
+    }
+    .logo-name span { color: var(--accent); }
+
+    /* ── HEADING ── */
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.9rem; font-weight: 700;
+      letter-spacing: -.04em; line-height: 1.1;
+      margin-bottom: .5rem;
+    }
+    .subtext { font-size: .85rem; color: var(--muted); margin-bottom: 2rem; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex; align-items: center; gap: .8rem;
+      margin: 1.6rem 0;
+      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── GOOGLE BTN ── */
+    .btn-google {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: .7rem;
+      padding: .8rem 1rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .88rem;
+      cursor: pointer; transition: background .2s, border-color .2s, transform .15s;
+    }
+    .btn-google:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.15); transform: translateY(-1px); }
+    .btn-google:active { transform: translateY(0); }
+    .btn-google svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ── FIELDS ── */
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: .45rem; }
+
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%; padding: .75rem 1rem;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .92rem;
+      outline: none; transition: border-color .2s, background .2s, box-shadow .2s;
+      caret-color: var(--accent);
+    }
+    .input-wrap input::placeholder { color: var(--muted); }
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      background: rgba(232,255,71,.04);
+      box-shadow: 0 0 0 3px rgba(232,255,71,.08);
+    }
+    .input-wrap input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(255,71,102,.1); }
+
+    /* eye toggle */
+    .eye-btn {
+      position: absolute; right: .9rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--muted);
+      padding: .2rem; display: grid; place-items: center;
+      transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--text); }
+    .eye-btn svg { width: 16px; height: 16px; }
+
+    .field-error { font-size: .75rem; color: var(--error); margin-top: .35rem; display: none; }
+
+    /* ── FORGOT ── */
+    .forgot { display: flex; justify-content: flex-end; margin-top: -.4rem; margin-bottom: 1.4rem; }
+    .forgot a { font-size: .78rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .forgot a:hover { color: var(--accent); }
+
+    /* ── SUBMIT ── */
+    .btn-primary {
+      width: 100%; padding: .85rem 1rem;
+      background: var(--accent);
+      border: none; border-radius: 10px;
+      color: #0a0a0f; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem;
+      letter-spacing: -.01em; cursor: pointer;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,255,71,.25); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* spinner inside btn */
+    .btn-primary .spinner {
+      display: none; width: 16px; height: 16px;
+      border: 2px solid rgba(0,0,0,.3); border-top-color: #0a0a0f;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      margin: 0 auto;
+    }
+    .btn-primary.loading .btn-label { display: none; }
+    .btn-primary.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: .75rem 1.2rem;
+      font-size: .84rem; color: var(--text);
+      display: flex; align-items: center; gap: .6rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s, transform .3s;
+      z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(232,255,71,.3); }
+    .toast.fail    { border-color: rgba(255,71,102,.3); }
+    .toast-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .toast.success .toast-dot { background: var(--accent); }
+    .toast.fail    .toast-dot { background: var(--error); }
+
+    /* ── FOOTER ── */
+    .card-footer { margin-top: 1.5rem; text-align: center; font-size: .8rem; color: var(--muted); }
+    .card-footer a { color: var(--text); text-decoration: none; font-weight: 400; transition: color .2s; }
+    .card-footer a:hover { color: var(--accent); }
+
+    /* ── CORNER TAG ── */
+    .firebase-tag {
+      position: fixed; top: 1.4rem; right: 1.6rem;
+      font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--muted); z-index: 10;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .firebase-tag::before {
+      content: ''; display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); opacity: .6;
+      animation: blink 2.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:.6} 50%{opacity:.15} }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="firebase-tag">Firebase Auth</div>
+
+  <div class="page">
+    <div class="card">
+
+      <!-- Logo -->
+      <div class="logo-mark">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div class="logo-name">Your<span>App</span></div>
+      </div>
+
+      <h1>Welcome back.</h1>
+      <p class="subtext">Sign in to continue to your dashboard.</p>
+
+      <!-- Google -->
+      <button class="btn-google" id="googleBtn">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="divider">or</div>
+
+      <!-- Email -->
+      <div class="field">
+        <label for="email">Email</label>
+        <div class="input-wrap">
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="field-error" id="email-err">Enter a valid email address.</div>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
+          <button class="eye-btn" id="eyeBtn" type="button" aria-label="Toggle password">
+            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="field-error" id="pass-err">Password must be at least 6 characters.</div>
+      </div>
+
+      <div class="forgot"><a href="#">Forgot password?</a></div>
+
+      <button class="btn-primary" id="loginBtn">
+        <span class="btn-label">Sign In</span>
+        <div class="spinner"></div>
+      </button>
+
+      <div class="card-footer">
+        Don't have an account? <a href="#">Create one</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-dot"></div>
+    <span id="toastMsg">Message</span>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       FIREBASE CONFIG — replace placeholders
+  ═══════════════════════════════════════ -->
+  <script type="module">
+    // ── Firebase SDK (v9 modular) ──────────────────────────────────────────────
+    import { initializeApp }                        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword,
+             signInWithPopup, GoogleAuthProvider,
+             sendPasswordResetEmail }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // ── 🔧 YOUR FIREBASE CONFIG ────────────────────────────────────────────────
+    const firebaseConfig = {
+  apiKey: "AIzaSyDtpj7RuxP8Hc1hlTBr14WJMc5HS4Br3Mk",
+  authDomain: "login-page-d961d.firebaseapp.com",
+  projectId: "login-page-d961d",
+  storageBucket: "login-page-d961d.firebasestorage.app",
+  messagingSenderId: "358731584515",
+  appId: "1:358731584515:web:bc8c7889cb725dc41fea36",
+  measurementId: "G-TRKSL1JJHC"
+};
+    // ──────────────────────────────────────────────────────────────────────────
+
+    const app      = initializeApp(firebaseConfig);
+    const auth     = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // ── DOM refs ───────────────────────────────────────────────────────────────
+    const emailEl    = document.getElementById("email");
+    const passEl     = document.getElementById("password");
+    const loginBtn   = document.getElementById("loginBtn");
+    const googleBtn  = document.getElementById("googleBtn");
+    const eyeBtn     = document.getElementById("eyeBtn");
+    const emailErr   = document.getElementById("email-err");
+    const passErr    = document.getElementById("pass-err");
+    const toast      = document.getElementById("toast");
+    const toastMsg   = document.getElementById("toastMsg");
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, type = "success") {
+      clearTimeout(toastTimer);
+      toast.className = `toast ${type}`;
+      toastMsg.textContent = msg;
+      requestAnimationFrame(() => toast.classList.add("show"));
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    function setLoading(on) {
+      loginBtn.disabled = on;
+      loginBtn.classList.toggle("loading", on);
+    }
+
+    function validate() {
+      let ok = true;
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
+      const passOk  = passEl.value.length >= 6;
+
+      emailEl.classList.toggle("error", !emailOk);
+      emailErr.style.display = emailOk ? "none" : "block";
+      passEl.classList.toggle("error", !passOk);
+      passErr.style.display = passOk ? "none" : "block";
+
+      if (!emailOk || !passOk) ok = false;
+      return ok;
+    }
+
+    // ── Email / password sign-in ───────────────────────────────────────────────
+    loginBtn.addEventListener("click", async () => {
+      if (!validate()) return;
+      setLoading(true);
+      try {
+        const cred = await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+        showToast(`Signed in as ${cred.user.email}`, "success");
+        // TODO: redirect → window.location.href = "/dashboard";
+      } catch (err) {
+        const msgs = {
+          "auth/user-not-found":   "No account found with this email.",
+          "auth/wrong-password":   "Incorrect password. Try again.",
+          "auth/too-many-requests":"Too many attempts. Try later.",
+          "auth/invalid-credential":"Invalid email or password.",
+        };
+        showToast(msgs[err.code] || err.message, "fail");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // ── Google sign-in ─────────────────────────────────────────────────────────
+    googleBtn.addEventListener("click", async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        showToast(`Welcome, ${result.user.displayName}!`, "success");
+        // TODO: redirect → window.location.href = "/dashboard";
+      } catch (err) {
+        if (err.code !== "auth/popup-closed-by-user") {
+          showToast(err.message, "fail");
+        }
+      }
+    });
+
+    // ── Forgot password ────────────────────────────────────────────────────────
+    document.querySelector(".forgot a").addEventListener("click", async (e) => {
+      e.preventDefault();
+      const email = emailEl.value.trim();
+      if (!email) { showToast("Enter your email first.", "fail"); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showToast("Reset link sent — check your inbox.", "success");
+      } catch (err) {
+        showToast(err.message, "fail");
+      }
+    });
+
+    // ── Eye toggle ─────────────────────────────────────────────────────────────
+    eyeBtn.addEventListener("click", () => {
+      const show = passEl.type === "password";
+      passEl.type = show ? "text" : "password";
+      document.getElementById("eyeIcon").innerHTML = show
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+           <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+           <line x1="1" y1="1" x2="23" y2="23"/>`
+        : `<path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>`;
+    });
+
+    // ── Enter key ──────────────────────────────────────────────────────────────
+    [emailEl, passEl].forEach(el => el.addEventListener("keydown", e => {
+      if (e.key === "Enter") loginBtn.click();
+    }));
+  </script>
+</body>
+</html>
